@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { signup } from "./actions";
+import GoogleSignInButton from "@/components/GoogleSignInButton";
 
 export default async function SignupPage({
   searchParams,
@@ -24,7 +25,17 @@ export default async function SignupPage({
           </p>
         )}
 
-        <form action={signup} className="mt-6 space-y-4">
+        <div className="mt-6">
+          <GoogleSignInButton />
+        </div>
+
+        <div className="my-5 flex items-center gap-3 text-xs text-zinc-400">
+          <div className="h-px flex-1 bg-black/10 dark:bg-white/10" />
+          ou
+          <div className="h-px flex-1 bg-black/10 dark:bg-white/10" />
+        </div>
+
+        <form action={signup} className="space-y-4">
           <div>
             <label htmlFor="email" className="block text-sm font-medium mb-1">
               E-mail
@@ -45,6 +56,20 @@ export default async function SignupPage({
             <input
               id="password"
               name="password"
+              type="password"
+              required
+              minLength={6}
+              autoComplete="new-password"
+              className="w-full rounded-md border border-black/10 dark:border-white/15 bg-transparent px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
+          <div>
+            <label htmlFor="confirmPassword" className="block text-sm font-medium mb-1">
+              Repetir senha
+            </label>
+            <input
+              id="confirmPassword"
+              name="confirmPassword"
               type="password"
               required
               minLength={6}

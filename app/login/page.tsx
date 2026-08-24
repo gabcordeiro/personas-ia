@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { login } from "./actions";
+import GoogleSignInButton from "@/components/GoogleSignInButton";
 
 export default async function LoginPage({
   searchParams,
@@ -29,7 +30,17 @@ export default async function LoginPage({
           </p>
         )}
 
-        <form action={login} className="mt-6 space-y-4">
+        <div className="mt-6">
+          <GoogleSignInButton redirectTo={params.redirectTo} />
+        </div>
+
+        <div className="my-5 flex items-center gap-3 text-xs text-zinc-400">
+          <div className="h-px flex-1 bg-black/10 dark:bg-white/10" />
+          ou
+          <div className="h-px flex-1 bg-black/10 dark:bg-white/10" />
+        </div>
+
+        <form action={login} className="space-y-4">
           <input type="hidden" name="redirectTo" value={params.redirectTo ?? "/personas"} />
           <div>
             <label htmlFor="email" className="block text-sm font-medium mb-1">
