@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { login } from "./actions";
 import GoogleSignInButton from "@/components/GoogleSignInButton";
 
@@ -75,13 +74,6 @@ export default async function LoginPage({
             Entrar
           </button>
         </form>
-
-        <p className="mt-6 text-center text-sm text-zinc-500">
-          Não tem conta?{" "}
-          <Link href="/signup" className="font-medium text-indigo-600 hover:underline">
-            Cadastre-se
-          </Link>
-        </p>
       </div>
     </div>
   );

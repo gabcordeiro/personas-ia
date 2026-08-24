@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { isAllowedEmail } from "@/lib/allowed-email";
 
 export async function login(formData: FormData) {
   const email = String(formData.get("email") || "");
@@ -9,10 +10,15 @@ export async function login(formData: FormData) {
   const redirectTo = String(formData.get("redirectTo") || "/personas");
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
     redirect(`/login?error=${encodeURIComponent(error.message)}`);
+  }
+
+  if (!isAllowedEmail(data.user?.email)) {
+    await supabase.auth.signOut();
+    redirect(`/login?error=${encodeURIComponent("Acesso restrito ao proprietário do app.")}`);
   }
 
   redirect(redirectTo || "/personas");
