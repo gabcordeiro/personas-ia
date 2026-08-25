@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { generateReply, type ChatMessage } from "@/lib/ai";
+import { getConversationContext } from "@/lib/conversation-context";
+import { getAboutMeText } from "@/lib/user-profile";
+import type { Message } from "@/lib/database.types";
 
 export async function POST(req: Request) {
   const supabase = await createClient();
@@ -77,27 +80,38 @@ export async function POST(req: Request) {
     participants.map((p) => [(p.personas as any).id, (p.personas as any).name])
   );
 
+  const nameFor = (m: Message) =>
+    m.sender_type === "user" ? "Usuário" : otherNames.get(m.sender_persona_id ?? "") ?? "Outra pessoa";
+
+  const aboutMe = await getAboutMeText(supabase, user.id);
+
+  const { summary, messages: recentMessages } = await getConversationContext(
+    supabase,
+    conversationId,
+    conversation,
+    (history ?? []) as Message[],
+    nameFor
+  );
+
   const systemPrompt = [
     persona.personality,
     persona.tone ? `Tom de voz: ${persona.tone}.` : null,
     `Você é ${persona.name} e está em uma conversa em grupo com outras pessoas/personas. ` +
       "Responda apenas como você mesmo, em português, de forma natural e breve (1 a 4 frases). " +
       "Não repita o nome de quem está falando na sua resposta, apenas responda.",
+    aboutMe ? `Sobre a pessoa (usuário humano) nesta conversa: ${aboutMe}` : null,
+    summary ? `Resumo do que já aconteceu nesta conversa até agora:\n${summary}` : null,
   ]
     .filter(Boolean)
     .join("\n\n");
 
   const chatMessages: ChatMessage[] = [
     { role: "system", content: systemPrompt },
-    ...(history ?? []).map((m): ChatMessage => {
+    ...recentMessages.map((m): ChatMessage => {
       if (m.sender_type === "persona" && m.sender_persona_id === persona.id) {
         return { role: "assistant", content: m.content };
       }
-      const speaker =
-        m.sender_type === "user"
-          ? "Usuário"
-          : otherNames.get(m.sender_persona_id ?? "") ?? "Outra pessoa";
-      return { role: "user", content: `${speaker}: ${m.content}` };
+      return { role: "user", content: `${nameFor(m)}: ${m.content}` };
     }),
   ];
 

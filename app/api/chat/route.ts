@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { generateReply, type ChatMessage } from "@/lib/ai";
+import { getConversationContext } from "@/lib/conversation-context";
+import { getAboutMeText } from "@/lib/user-profile";
+import type { Message } from "@/lib/database.types";
 
 export async function POST(req: Request) {
   const supabase = await createClient();
@@ -62,10 +65,22 @@ export async function POST(req: Request) {
     .eq("conversation_id", conversationId)
     .order("created_at", { ascending: true });
 
+  const aboutMe = await getAboutMeText(supabase, user.id);
+
+  const { summary, messages: recentMessages } = await getConversationContext(
+    supabase,
+    conversationId,
+    conversation,
+    (history ?? []) as Message[],
+    (m) => (m.sender_type === "user" ? "Usuário" : persona.name)
+  );
+
   const systemPrompt = [
     `Seu nome é ${persona.name}.`,
     persona.personality,
     persona.tone ? `Tom de voz: ${persona.tone}.` : null,
+    aboutMe ? `Sobre a pessoa com quem você está conversando: ${aboutMe}` : null,
+    summary ? `Resumo do que já aconteceu nesta conversa até agora:\n${summary}` : null,
     "Responda sempre em português, de forma natural, como se estivesse em uma conversa real. Se perguntarem seu nome, responda o nome acima — nunca invente outro.",
   ]
     .filter(Boolean)
@@ -73,7 +88,7 @@ export async function POST(req: Request) {
 
   const chatMessages: ChatMessage[] = [
     { role: "system", content: systemPrompt },
-    ...(history ?? []).map((m): ChatMessage => ({
+    ...recentMessages.map((m): ChatMessage => ({
       role: m.sender_type === "user" ? "user" : "assistant",
       content: m.content,
     })),

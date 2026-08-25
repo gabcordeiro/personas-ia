@@ -61,6 +61,8 @@ export type Database = {
           max_turns: number
           mode: string
           owner_id: string
+          summary: string | null
+          summary_covers_count: number
           title: string
         }
         Insert: {
@@ -70,6 +72,8 @@ export type Database = {
           max_turns?: number
           mode?: string
           owner_id: string
+          summary?: string | null
+          summary_covers_count?: number
           title?: string
         }
         Update: {
@@ -79,6 +83,8 @@ export type Database = {
           max_turns?: number
           mode?: string
           owner_id?: string
+          summary?: string | null
+          summary_covers_count?: number
           title?: string
         }
         Relationships: []
@@ -155,6 +161,24 @@ export type Database = {
           owner_id?: string
           personality?: string
           tone?: string | null
+        }
+        Relationships: []
+      }
+      user_profiles: {
+        Row: {
+          about_me: string
+          owner_id: string
+          updated_at: string
+        }
+        Insert: {
+          about_me?: string
+          owner_id: string
+          updated_at?: string
+        }
+        Update: {
+          about_me?: string
+          owner_id?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -315,3 +339,5 @@ export type ConversationParticipant = Tables<"conversation_participants">
 export type Message = Omit<Tables<"messages">, "sender_type"> & {
   sender_type: SenderType
 }
+
+export type UserProfile = Tables<"user_profiles">

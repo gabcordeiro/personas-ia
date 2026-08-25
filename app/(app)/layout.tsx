@@ -26,6 +26,9 @@ export default async function AppLayout({
             <Link href="/chat/new" className="text-zinc-600 dark:text-zinc-300 hover:text-indigo-600">
               Nova conversa
             </Link>
+            <Link href="/profile" className="text-zinc-600 dark:text-zinc-300 hover:text-indigo-600">
+              Quem eu sou
+            </Link>
             {user && (
               <span className="hidden sm:inline text-zinc-400 text-xs">
                 {user.email}
