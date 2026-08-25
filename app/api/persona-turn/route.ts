@@ -57,7 +57,9 @@ export async function POST(req: Request) {
 
   const personaTurnsSoFar = (history ?? []).filter((m) => m.sender_type === "persona").length;
 
-  if (personaTurnsSoFar >= conversation.max_turns) {
+  const isUnlimited = conversation.max_turns <= 0;
+
+  if (!isUnlimited && personaTurnsSoFar >= conversation.max_turns) {
     await supabase.from("conversations").update({ is_running: false }).eq("id", conversationId);
     return NextResponse.json({ done: true, reason: "max_turns" });
   }
@@ -124,7 +126,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: insertError.message }, { status: 500 });
   }
 
-  const done = personaTurnsSoFar + 1 >= conversation.max_turns;
+  const done = !isUnlimited && personaTurnsSoFar + 1 >= conversation.max_turns;
   if (done) {
     await supabase.from("conversations").update({ is_running: false }).eq("id", conversationId);
   }

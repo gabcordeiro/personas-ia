@@ -67,8 +67,9 @@ export default function ChatRoom({
 
   const isMulti = conversation.mode === "multi_persona";
   const singlePersona = !isMulti ? participants[0]?.personas : undefined;
+  const isUnlimited = conversation.max_turns <= 0;
   const personaTurnsSoFar = messages.filter((m) => m.sender_type === "persona").length;
-  const reachedMaxTurns = isMulti && personaTurnsSoFar >= conversation.max_turns;
+  const reachedMaxTurns = isMulti && !isUnlimited && personaTurnsSoFar >= conversation.max_turns;
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -181,7 +182,9 @@ export default function ChatRoom({
           <h1 className="text-lg font-semibold">{conversation.title}</h1>
           <p className="text-xs text-zinc-500">
             {isMulti
-              ? `Multi-persona · ${participants.map((p) => p.personas.name).join(", ")}`
+              ? `Multi-persona${isUnlimited ? " · contínua ∞" : ""} · ${participants
+                  .map((p) => p.personas.name)
+                  .join(", ")}`
               : singlePersona?.name}
           </p>
         </div>

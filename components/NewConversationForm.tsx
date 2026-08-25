@@ -20,6 +20,7 @@ export default function NewConversationForm({
   const [title, setTitle] = useState("");
   const [initialMessage, setInitialMessage] = useState("");
   const [maxTurns, setMaxTurns] = useState(10);
+  const [continuous, setContinuous] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -71,7 +72,7 @@ export default function NewConversationForm({
               ? "Conversa entre personas"
               : personas.find((p) => p.id === selected[0])?.name ?? "Nova conversa"),
           initialMessage,
-          maxTurns,
+          maxTurns: continuous ? 0 : maxTurns,
         });
       } catch (err) {
         setError(err instanceof Error ? err.message : "Erro ao criar conversa");
@@ -204,19 +205,37 @@ export default function NewConversationForm({
       </div>
 
       {mode === "multi_persona" && (
-        <div>
-          <label htmlFor="maxTurns" className="block text-sm font-medium mb-1">
-            Limite de turnos (segurança)
+        <div className="space-y-3">
+          <label className="flex items-center gap-2 text-sm font-medium">
+            <input
+              type="checkbox"
+              checked={continuous}
+              onChange={(e) => setContinuous(e.target.checked)}
+              className="h-4 w-4 rounded border-black/20 dark:border-white/25"
+            />
+            Conversa contínua (sem limite de turnos)
           </label>
-          <input
-            id="maxTurns"
-            type="number"
-            min={1}
-            max={100}
-            value={maxTurns}
-            onChange={(e) => setMaxTurns(Number(e.target.value))}
-            className="w-32 rounded-md border border-black/10 dark:border-white/15 bg-transparent px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500"
-          />
+          <p className="text-xs text-zinc-500">
+            As personas seguem se revezando indefinidamente, sempre lendo o histórico
+            completo — só param quando você clicar em &ldquo;Pausar&rdquo;.
+          </p>
+
+          {!continuous && (
+            <div>
+              <label htmlFor="maxTurns" className="block text-sm font-medium mb-1">
+                Limite de turnos (segurança)
+              </label>
+              <input
+                id="maxTurns"
+                type="number"
+                min={1}
+                max={100}
+                value={maxTurns}
+                onChange={(e) => setMaxTurns(Number(e.target.value))}
+                className="w-32 rounded-md border border-black/10 dark:border-white/15 bg-transparent px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+          )}
         </div>
       )}
 

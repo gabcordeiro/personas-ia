@@ -10,6 +10,7 @@ export interface CreateConversationInput {
   personaIds: string[];
   title: string;
   initialMessage: string;
+  /** Safety cap on persona turns for multi_persona mode. 0 means unlimited (continuous). */
   maxTurns: number;
 }
 
@@ -33,7 +34,7 @@ export async function createConversation(input: CreateConversationInput) {
       owner_id: user.id,
       title: input.title || "Nova conversa",
       mode: input.mode,
-      max_turns: input.maxTurns || 10,
+      max_turns: Number.isFinite(input.maxTurns) ? input.maxTurns : 10,
       is_running: false,
     })
     .select()
