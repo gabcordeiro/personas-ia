@@ -60,10 +60,15 @@ export default function ChatRoom({
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [running, setRunning] = useState(false);
-  const [typingPersonaName, setTypingPersonaName] = useState<string | null>(null);
+  const [typingPersona, setTypingPersona] = useState<Persona | null>(null);
   const [error, setError] = useState<string | null>(null);
   const runningRef = useRef(false);
+  const messagesRef = useRef(messages);
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
 
   const isMulti = conversation.mode === "multi_persona";
   const singlePersona = !isMulti ? participants[0]?.personas : undefined;
@@ -73,7 +78,7 @@ export default function ChatRoom({
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, typingPersonaName]);
+  }, [messages, typingPersona]);
 
   useEffect(() => {
     return () => {
@@ -129,9 +134,9 @@ export default function ChatRoom({
     setConversationRunning(conversation.id, true).catch(() => {});
 
     while (runningRef.current) {
-      const turnsSoFar = messages.filter((m) => m.sender_type === "persona").length;
+      const turnsSoFar = messagesRef.current.filter((m) => m.sender_type === "persona").length;
       const next = participants[turnsSoFar % participants.length]?.personas;
-      setTypingPersonaName(next?.name ?? null);
+      setTypingPersona(next ?? null);
 
       try {
         const res = await fetch("/api/persona-turn", {
@@ -143,32 +148,36 @@ export default function ChatRoom({
         if (!res.ok) throw new Error(data.error ?? "Erro ao gerar resposta");
 
         if (data.message) {
-          setMessages((prev) => [...prev, data.message]);
+          setMessages((prev) => {
+            const updated = [...prev, data.message];
+            messagesRef.current = updated;
+            return updated;
+          });
         }
         if (data.done) {
           runningRef.current = false;
           setRunning(false);
-          setTypingPersonaName(null);
+          setTypingPersona(null);
           break;
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : "Erro ao gerar resposta");
         runningRef.current = false;
         setRunning(false);
-        setTypingPersonaName(null);
+        setTypingPersona(null);
         break;
       }
 
       await new Promise((r) => setTimeout(r, 1200));
     }
 
-    setTypingPersonaName(null);
+    setTypingPersona(null);
   }
 
   function pauseAutoConversation() {
     runningRef.current = false;
     setRunning(false);
-    setTypingPersonaName(null);
+    setTypingPersona(null);
     setConversationRunning(conversation.id, false).catch(() => {});
   }
 
@@ -239,12 +248,12 @@ export default function ChatRoom({
           );
         })}
 
-        {(sending || typingPersonaName) && (
+        {(sending || typingPersona) && (
           <div className="flex items-end gap-2 justify-start">
-            <Avatar persona={isMulti ? undefined : singlePersona} />
+            <Avatar persona={isMulti ? (typingPersona ?? undefined) : singlePersona} />
             <div className="rounded-2xl rounded-bl-sm bg-zinc-100 dark:bg-zinc-800 px-4 py-2 text-sm text-zinc-500 italic">
-              {typingPersonaName
-                ? `${typingPersonaName} está digitando...`
+              {typingPersona
+                ? `${typingPersona.name} está digitando...`
                 : `${singlePersona?.name ?? "Persona"} está digitando...`}
             </div>
           </div>
