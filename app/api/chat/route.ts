@@ -63,9 +63,10 @@ export async function POST(req: Request) {
     .order("created_at", { ascending: true });
 
   const systemPrompt = [
+    `Seu nome é ${persona.name}.`,
     persona.personality,
     persona.tone ? `Tom de voz: ${persona.tone}.` : null,
-    "Responda sempre em português, de forma natural, como se estivesse em uma conversa real.",
+    "Responda sempre em português, de forma natural, como se estivesse em uma conversa real. Se perguntarem seu nome, responda o nome acima — nunca invente outro.",
   ]
     .filter(Boolean)
     .join("\n\n");
